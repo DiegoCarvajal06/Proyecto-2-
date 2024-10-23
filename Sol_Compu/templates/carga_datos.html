@@ -1,0 +1,12 @@
+
+<h1>Cargar Archivo Geminis API Competition</h1>
+<form method="post" enctype="multipart/form-data">
+    <label for="Gemini">Sube el archivo Gemini.csv:</label>
+    <input type="file" id="Gemini" name="Gemini" accept=".csv"><br><br>
+    <button type="submit" formaction="{{ url_for('cargar_Gemini_API') }}">Cargar Geminis</button>
+</form>
+
+<br>
+<form method="get">
+    <button type="submit" formaction="{{ url_for('menu_principal') }}">Volver</button>
+</form>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de los datos Geminis</title>
+</head>
+<body>
+    <h1>Gestión</h1> 
+    <form method="POST">
+        <input type="hidden" name="action" value="none" id="action">
+        <!-- Campo ID visible pero no editable para operaciones específicas -->
+        <label for="_id">ID:</label>
+        <input type="text" id="_id" name="_id" placeholder="ID del Nodo"><br>
+        
+        <label for="title">Nombre del titulo:</label>
+        <input type="text" id="title" name="title" placeholder="Nombre del titulo">
+        <input type="checkbox" name="update_title_name"><br>
+
+        <label for="Sub-Title">Ingredientes:</label>
+        <textarea id="Sub-Title" name="Sub-Title" placeholder="Nombre del subtitulo"></textarea>
+        <input type="checkbox" name="update_Sub-Title"><br>
+
+        <label for="YouTube_Link">Escriba el Link de YouTube:</label>
+        <textarea id="YouTube_Link" name="YouTube_Link" placeholder="Nombre del Link de YouTube"></textarea>
+        <input type="checkbox" name="update_YouTube_Link"><br>
+
+        <label for="What_it_Does">¿Qué es lo que hace?:</label>
+        <input type="text" id="What_it_Does" name="What_it_Does" placeholder="¿Qué es lo que hace?">
+        <input type="checkbox" name="update_What_it_Does"><br>
+
+        <label for="Built_With">Construido con:</label>
+        <input type="text" id="Built_With" name="Built_With" placeholder="Construido con">
+        <input type="checkbox" name="update_Built_With"><br>
+
+        <label for="By">Por:</label>
+        <input type="text" id="By" name="By" placeholder="Por">
+        <input type="checkbox" name="update_By"><br>
+
+        <label for="Location">Localizacion:</label>
+        <input type="text" id="Location" name="Location" placeholder="Localizacion">
+        <input type="checkbox" name="update_Location"><br>
+
+        <label for="Project_Link">Link del proyecto:</label>
+        <input type="text" id="Project_Link" name="Project_Link" placeholder="Link del proyecto">
+        <input type="checkbox" name="update_Project_Link"><br>
+
+
+
+        <button type="button" onclick="submitForm('Agregar')">Agregar</button>
+        <button type="button" onclick="submitForm('Actualizar')">Actualizar</button>
+        <button type="button" onclick="submitForm('Eliminar')">Eliminar</button>
+        <button type="button" onclick="submitForm('Consultar')">Consultar</button>
+        <button type="button" onclick="submitForm('Ver Todo')">Ver Todo</button>
+        <button type="button" onclick="submitForm('Salir')">Volver al Dashboard</button>
+    </form>
+
+  
+
+</body>
+</html>
