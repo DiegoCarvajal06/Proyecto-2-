@@ -8,7 +8,6 @@ ALLOWED_EXTENSIONS = {'txt','csv'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
-#app.config['UPLOAD_FOLDER'] = os.path.join('C:', 'Users', 'Nicole', 'OneDrive', 'Documentos', '7to_semestre', 'Bases_avanzadas', 'Proyecto2', 'ProyectoBases', 'Proyecto_Neo4j', 'Sol_Compu', 'uploads')
 app.secret_key = 'supersecretkey'
 
 
@@ -74,24 +73,53 @@ def cargar_Gemini_API():
     return redirect(url_for('carga_datos'))
 
 
+@app.route('/agregar_nodo', methods=['POST'])
+def agregar_nodo():
+    title = request.form['title']
+    Sub_Title = request.form['Sub_Title']
+    YouTube_Link = request.form['YouTube_Link']
+    What_it_Does = request.form['What_it_Does']
+    Built_With = request.form['Built_With']
+    By = request.form['By']
+    Location = request.form['Location']
+    Project_Link = request.form['Project_Link']
 
-'''
-@app.route('/agregar gemini')
-def agregar_gemini():
-    return render_template('todo_crud.html')
+    try:
+        query = """
+        CREATE (g:Gemini {
+            title: $title, 
+            Sub_Title: $Sub_Title, 
+            YouTube_Link: $YouTube_Link, 
+            What_it_Does: $What_it_Does,
+            Built_With: $Built_With,
+            By: $By,
+            Location: $Location,
+            Project_Link: $Project_Link
+        })
+        """
+        graph.run(query,title=title, Sub_Title=Sub_Title,YouTube_Link=YouTube_Link, What_it_Does=What_it_Does,
+                  Built_With=Built_With, By=By, Location=Location, Project_Link= Project_Link)
+        flash(f'Gemini {title} ha sido agregado exitosamente.', 'success')
 
-@app.route('/leer gemini')
-def leer_gemini():
-    return render_template('todo_crud.html')
+    except Exception as e:
+        flash(f'Error al agregar evento: {e}', 'danger')
 
-@app.route('/editar gemini')
-def editar_gemini():
-    return render_template('todo_crud.html')
+    return redirect(url_for('CRUD'))
 
-@app.route('/borrar gemini')
-def borrar_gemini():
-    return render_template('todo_crud.html')
-'''
+@app.route('/editar_nodo', methods=['POST'])
+def editar_nodo():
+    pass
+
+
+@app.route('/leer_nodo', methods=['POST'])
+def leer_nodo():
+    pass
+
+@app.route('/borrar_nodo', methods=['POST'])
+def borrar_nodo():
+    pass
+
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=8080)
