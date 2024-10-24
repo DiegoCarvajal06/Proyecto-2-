@@ -4,12 +4,14 @@ from py2neo import Graph, Node
 import os
 import csv
 
-ALLOWED_EXTENSIONS = {'txt','csv'}
+ALLOWED_EXTENSIONS = {'txt','csv', 'xlsx'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.secret_key = 'supersecretkey'
 
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
 
 graph = conectar_bd()
 
@@ -24,82 +26,104 @@ def menu_principal():
 def carga_datos():
     return render_template('carga_datos.html')
 
-#CRUS
-@app.route('/CRUD')
-def CRUD():
-    return render_template('CRUD.html')
+#Borrar base de datos     LISTO
+@app.route('/borrar_base_datos', methods=['POST'])
+def borrar_base_datos():
+    try:
+        query = """
+        MATCH (n) DETACH DELETE n
+        """
+        graph.run(query)
+        flash('La BASE DE DATOS ha sido eliminada exitosamente.', 'success') #aqui no me esta funcionando el mensaje
 
-#resultados
-@app.route('/resultados')
-def resultados():
-    return render_template('resultados.html')
+    except Exception as e:
+        flash(f'Error al agregar evento: {e}', 'danger')
+
+    return redirect(url_for('carga_datos'))
+
 
 
 #Cargas archivo GEMINI_API_COMPETITION
-@app.route('/carga_datos', methods=['POST'])
+@app.route('/cargar_Gemini_API', methods=['POST'])
 def cargar_Gemini_API():
     if 'Gemini' not in request.files:
         flash('No se ha seleccionado ningún archivo', 'danger')
         return redirect(url_for('carga_datos'))
 
     archivo = request.files['Gemini']
-
-    if archivo.filename == '' or not archivo.filename.endswith('.csv'):
-        flash('Archivo no válido. Por favor sube un archivo CSV.', 'danger')
-        return redirect(url_for('carga_datos'))
-
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], archivo.filename)
-    archivo.save(file_path)
+#   print(archivo)
 
     try:
-        with open(file_path, newline='', encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                Titulo = row.get('Title')
-                SubTitulo = row['Sub_Title']
-                YouTubeLink = row['YouTube_Link']
-                WhatItDoes = row['What_it_Does']
-                BuiltWith = row['Built_With']
-                By = row['By']     
-
-                geminis = Node("Geminis", Title=Titulo, Sub_Title=SubTitulo,YouTube_Link= YouTubeLink, What_it_Does=WhatItDoes,
-                               Built_With=BuiltWith)
-                graph.create(geminis)
-
-        flash('Geminis cargados exitosamente en la base de datos.', 'success')
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], archivo.filename)
+        archivo.save(file_path)
+        print(f'Archivo guardado correctamente en {file_path}') 
     except Exception as e:
+        print(f'Error al guardar el archivo: {e}')
+        flash(f'Error al guardar el archivo: {e}', 'danger')
+        return redirect(url_for('carga_datos'))
+
+    try:
+        print("Entro al try")
+        with open(file_path, newline='', encoding='utf-8') as csvfile:
+            print("Entro al with")
+            
+            reader = csv.DictReader(csvfile)
+            print(reader)
+            #creo el nodito de Tecnologias
+            for row in reader:
+                Title = row.get('Title', '')
+                What_it_Does = row.get('What it Does', '')  # Nombre correcto de la columna según tu ejemplo
+                Built_With = row.get('Built With', '')      # Asegúrate de que estos nombres coinciden con el archivo CSV
+            
+                #print(f"Procesando What_it_Does: {What_it_Does}, Built_With: {Built_With}")
+            
+                tecnologias = Node("Tecnologias",Title=Title, What_it_Does=What_it_Does, Built_With=Built_With)
+                graph.create(tecnologias)
+                
+            #creo el nodito de Aplicaciones            
+            for row in reader:
+                Title = row.get('Title', '')  # Usar 'get' en lugar de indexación directa para evitar errores
+                Built_With = row.get('Built With', '')
+                By = row.get('By', '')
+                print(f"Procesando Aplicaciones - Title: {Title}, Built_With: {Built_With}, By: {By}")
+                aplicaciones = Node("Aplicaciones", Title=Title, Built_With=Built_With, By=By)
+                graph.create(aplicaciones)
+
+            #creo el nodito de Creadores
+            for row in reader:
+                Title = row.get('Title', '')
+                By = row.get('By', '')
+                print(f"Procesando Creadores - Title: {Title}, By: {By}")
+                creadores = Node("Creadores", Title=Title, By=By)
+                graph.create(creadores) 
+        
+
+            
+        flash('Nodos cargados exitosamente en la base de datos.', 'success')
+    except Exception as e:
+        print("Creo que entro aqui al except")
         flash(f'Error al procesar el archivo: {e}', 'danger')
 
     return redirect(url_for('carga_datos'))
 
 
-@app.route('/agregar_nodo', methods=['POST'])
-def agregar_nodo():
+
+@app.route('/agregar_nodo_aplicaciones', methods=['POST'])
+def agregar_nodo_aplicaciones():
     title = request.form['title']
-    Sub_Title = request.form['Sub_Title']
-    YouTube_Link = request.form['YouTube_Link']
     What_it_Does = request.form['What_it_Does']
     Built_With = request.form['Built_With']
-    By = request.form['By']
-    Location = request.form['Location']
-    Project_Link = request.form['Project_Link']
-
     try:
         query = """
         CREATE (g:Gemini {
             title: $title, 
-            Sub_Title: $Sub_Title, 
-            YouTube_Link: $YouTube_Link, 
             What_it_Does: $What_it_Does,
             Built_With: $Built_With,
-            By: $By,
-            Location: $Location,
-            Project_Link: $Project_Link
         })
         """
-        graph.run(query,title=title, Sub_Title=Sub_Title,YouTube_Link=YouTube_Link, What_it_Does=What_it_Does,
-                  Built_With=Built_With, By=By, Location=Location, Project_Link= Project_Link)
-        flash(f'Gemini {title} ha sido agregado exitosamente.', 'success')
+        graph.run(query,title=title,What_it_Does=What_it_Does,
+                  Built_With=Built_With)
+        flash(f'Gemini {title} ha sido agregado exitosamente.', 'success') #aqui no me esta funcionando el mensaje
 
     except Exception as e:
         flash(f'Error al agregar evento: {e}', 'danger')
