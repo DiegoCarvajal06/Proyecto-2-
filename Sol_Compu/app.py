@@ -79,7 +79,11 @@ def cargar_Gemini_API():
             
                 tecnologias = Node("Tecnologias",Title=Title, What_it_Does=What_it_Does, Built_With=Built_With)
                 graph.create(tecnologias)
-                
+
+        #vuelvo abrir el archivo       
+        with open(file_path, newline='', encoding='utf-8') as csvfile:
+            print("Procesando Aplicaciones")
+            reader = csv.DictReader(csvfile)      
             #creo el nodito de Aplicaciones            
             for row in reader:
                 Title = row.get('Title', '')  # Usar 'get' en lugar de indexación directa para evitar errores
@@ -89,6 +93,10 @@ def cargar_Gemini_API():
                 aplicaciones = Node("Aplicaciones", Title=Title, Built_With=Built_With, By=By)
                 graph.create(aplicaciones)
 
+        #vuelvo abror el archivo para procesarlo.                 
+        with open(file_path, newline='', encoding='utf-8') as csvfile:
+            print("Procesando Aplicaciones")
+            reader = csv.DictReader(csvfile)
             #creo el nodito de Creadores
             for row in reader:
                 Title = row.get('Title', '')
