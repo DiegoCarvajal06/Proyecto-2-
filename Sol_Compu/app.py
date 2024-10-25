@@ -41,6 +41,21 @@ def borrar_base_datos():
 
     return redirect(url_for('carga_datos'))
 
+def crear_restricciones():
+    try:
+        # Restricción de unicidad para Aplicaciones (campo Title)
+        graph.run("CREATE CONSTRAINT aplicaciones_title_unique IF NOT EXISTS ON (a:Aplicaciones) ASSERT a.Title IS UNIQUE;")
+        
+        # Restricción de unicidad para Tecnologías (campo Built_With)
+        graph.run("CREATE CONSTRAINT tecnologias_whatitdoes_unique IF NOT EXISTS ON (t:Tecnologias) ASSERT t.Built_With IS UNIQUE;")
+        
+        # Restricción de unicidad para Creadores (campo By)
+        graph.run("CREATE CONSTRAINT creadores_by_unique IF NOT EXISTS ON (c:Creadores) ASSERT c.By IS UNIQUE;")
+        
+        print("Restricciones creadas correctamente.")
+    except Exception as e:
+        print(f"Error al crear restricciones: {e}")
+
 
 
 #Cargas archivo GEMINI_API_COMPETITION
@@ -63,49 +78,97 @@ def cargar_Gemini_API():
         return redirect(url_for('carga_datos'))
 
     try:
-        print("Entro al try")
-        with open(file_path, newline='', encoding='utf-8') as csvfile:
-            print("Entro al with")
-            
+        with open(file_path, newline='', encoding='utf-8') as csvfile:            
             reader = csv.DictReader(csvfile)
-            print(reader)
-            #creo el nodito de Tecnologias
             for row in reader:
-                Title = row.get('Title', '')
-                What_it_Does = row.get('What it Does', '')  # Nombre correcto de la columna según tu ejemplo
-                Built_With = row.get('Built With', '')      # Asegúrate de que estos nombres coinciden con el archivo CSV
-            
-                #print(f"Procesando What_it_Does: {What_it_Does}, Built_With: {Built_With}")
-            
-                tecnologias = Node("Tecnologias",Title=Title, What_it_Does=What_it_Does, Built_With=Built_With)
-                graph.create(tecnologias)
+                built_with_raw = row.get('Built With', '') 
+                tecnologias_list = [tech.strip() for tech in built_with_raw.split(',')]  # Crear lista de tecnologías sin espacios extra
+                print(f"Tecnologías procesadas: {tecnologias_list}")
 
+                for tecnologia in tecnologias_list:
+                    if tecnologia:  # Asegurarse de que no sea una cadena vacía
+                        # Verificar si el nodo ya existe para esta tecnología individual
+                        existe_tecnologia = graph.evaluate("MATCH (t:Tecnologias {Built_With: $tecnologia}) RETURN t", tecnologia=tecnologia)
+                        print(f"Verificando tecnología: '{tecnologia}' - Existe: {'Sí' if existe_tecnologia else 'No'}")
+
+                        if not existe_tecnologia:
+                            try:
+                                # Crear nodo de tecnología individual
+                                tecnologias = Node("Tecnologias", Built_With=tecnologia)
+                                graph.create(tecnologias)
+                                print(f"Tecnología creada: {tecnologia}")
+                            except Exception as e:
+                                flash(f'Error al crear nodo de Tecnologías: {e}', 'danger')
+                        else:
+                            print(f"La tecnología '{tecnologia}' ya existe. No se creará un duplicado.")                         
+            
         #vuelvo abrir el archivo       
         with open(file_path, newline='', encoding='utf-8') as csvfile:
-            print("Procesando Aplicaciones")
             reader = csv.DictReader(csvfile)      
             #creo el nodito de Aplicaciones            
             for row in reader:
-                Title = row.get('Title', '')  # Usar 'get' en lugar de indexación directa para evitar errores
+                Title = row.get('Title', '')  # descripcion
                 Built_With = row.get('Built With', '')
-                By = row.get('By', '')
-                print(f"Procesando Aplicaciones - Title: {Title}, Built_With: {Built_With}, By: {By}")
-                aplicaciones = Node("Aplicaciones", Title=Title, Built_With=Built_With, By=By)
-                graph.create(aplicaciones)
+                By = row.get('By', '')   
+                aplicacion_list = [tech.strip() for tech in Title.split(',')]   
+
+                for apps in aplicacion_list:
+                    if apps:
+                        existe_tecnologia = graph.evaluate("MATCH (a:Aplicaciones {Title: $Title}) RETURN a", Title=Title)
+
+                        if not existe_tecnologia:
+                            try:
+                                aplicaciones = Node("Aplicaciones", Title=Title, Built_With=Built_With, By=By)
+                                graph.create(aplicaciones)
+                            except Exception as e:
+                                flash(f'Error al crear nodo de Aplicaciones: {e}', 'danger')
+                        else:
+                            print(f"El nodo de Aplicaciones con Title '{Title}' ya existe. No se creará un duplicado.")
+
 
         #vuelvo abror el archivo para procesarlo.                 
         with open(file_path, newline='', encoding='utf-8') as csvfile:
-            print("Procesando Aplicaciones")
+            print("Procesando Creadores")
             reader = csv.DictReader(csvfile)
             #creo el nodito de Creadores
             for row in reader:
                 Title = row.get('Title', '')
                 By = row.get('By', '')
-                print(f"Procesando Creadores - Title: {Title}, By: {By}")
-                creadores = Node("Creadores", Title=Title, By=By)
-                graph.create(creadores) 
-        
 
+                print(f"Procesando Creadores - Title: {Title}, By: {By}")
+                if not graph.evaluate(f"MATCH (c:Creadores {{By: '{By}'}}) RETURN c"):
+                    try:
+                        creadores = Node("Creadores", Title=Title, By=By)
+                        graph.create(creadores)
+                    except Exception as e:
+                        flash(f'Error al crear nodo de Creadores: {e}', 'danger')
+                else:
+                    print(f"El nodo con By '{By}' ya existe. No se creará un duplicado.")
+
+        #esto es escencial para simplemente crear los noditos de la region
+        with open(file_path, newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            print("Procesando REGIONES")
+            for row in reader:
+                Location = row.get('Location', '')
+                location_list = [tech.strip() for tech in Location.split(',')]   
+    
+                for locs in location_list:
+                    if locs:  # Asegúrate de que no sea una cadena vacía
+                        # Verificar si el nodo ya existe para esta región
+                        existe_region = graph.evaluate("MATCH (l:Regiones {Location: $Location}) RETURN l", Location=locs)
+                        
+                        if not existe_region:  # Si la región no existe, crearla
+                            try:
+                                regiones = Node("Regiones", Location=locs)  # Cambié Location a locs
+                                graph.create(regiones)
+                                print(f"Nodo de Regiones creado: {locs}")
+                            except Exception as e:
+                                flash(f'Error al crear nodo de Regiones: {e}', 'danger')
+                        else:
+                            print(f"El nodo de Regiones con Location '{locs}' ya existe. No se creará un duplicado.")
+    
+    
             
         flash('Nodos cargados exitosamente en la base de datos.', 'success')
     except Exception as e:
