@@ -4,7 +4,7 @@ from py2neo import Graph, Node
 import os
 import csv
 
-ALLOWED_EXTENSIONS = {'txt','csv', 'xlsx'}
+#ALLOWED_EXTENSIONS = {'txt','csv', 'xlsx'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -40,6 +40,13 @@ def borrar_base_datos():
         flash(f'Error al agregar evento: {e}', 'danger')
 
     return redirect(url_for('carga_datos'))
+@app.route('/cargar_relaciones', methods=['POST'])
+def cargar_relaciones():
+    try:
+        #relacionar los Creadores con 
+        pass
+    except Exception as e:
+        flash(f'ERROR <Relaciones no creadas>')
 
 def crear_restricciones():
     try:

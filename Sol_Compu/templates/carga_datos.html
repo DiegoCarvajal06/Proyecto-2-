@@ -1,3 +1,12 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargar Archivo Geminis API Competition</title>
+    <link rel="stylesheet" href="/Proyecto_Neo4j/Sol_Compu/css/styles.css"> <!-- Vincula el archivo CSS -->
+</head>
+<body>
 
 <h1>Cargar Archivo Geminis API Competition</h1>
 
@@ -7,14 +16,22 @@
     <button type="submit">Borrado</button>
 </form>
 
-
 <form method="POST" enctype="multipart/form-data" action="{{ url_for('cargar_Gemini_API') }}">
-    <label for="Gemini">Sube el archivo Gemini.csv:</label>
+    <label for="Gemini">Subir archivo</label>
     <input type="file" id="Gemini" name="Gemini" accept=".csv, .xlsx"><br><br>
     <button type="submit">Cargar Geminis</button>
 </form>
+
+<form method="POST" action="{{ url_for('cargar_relaciones') }}">
+    <input type="submit" id="relaciones" name="relaciones" ><br><br>
+    <button type="submit">Relaciones</button>
+</form>
+
 
 <br>
 <form method="get">
     <button type="submit" formaction="{{ url_for('menu_principal') }}">Volver</button>
 </form>
+
+</body>
+</html>
